@@ -64,9 +64,9 @@
         password: "{{ ansible_password }}"
         path: routing ospf interface-template
         data:
-          - areas: backbone
+          - area: "{{ item.area }}"
             interfaces: ether1
-            network: "{{ item.network }}"
+            networks: "{{ item.network }}"
       loop: "{{ ospf_networks }}"
 
     - name: Gather OSPF topology facts
