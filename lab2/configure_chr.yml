@@ -69,24 +69,38 @@
             networks: "{{ item.network }}"
       loop: "{{ ospf_networks }}"
 
-    - name: Gather OSPF topology facts
-      community.routeros.facts:
+    - name: Gather OSPF facts
+      community.routeros.api_facts:
+        hostname: "{{ ansible_host }}"
+        username: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
         gather_subset:
           - routing
-      register: ospf_facts
 
-    - name: Gather full configuration
-      community.routeros.facts:
-        gather_subset:
-          - config
-      register: config_facts
+    - name: Gather configuration
+      community.routeros.api_info:
+        hostname: "{{ ansible_host }}"
+        username: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        path: "{{ item }}"
+      loop: "{{ config_paths }}"
+      register: config_state
+
+    - name: Create output directory
+      ansible.builtin.file:
+        path: ./output
+        state: directory
+        mode: "0755"
+      run_once: true
 
     - name: Save OSPF topology to file
       ansible.builtin.copy:
-        content: "{{ ospf_facts | to_nice_json }}"
+        content: >-
+          {{ {'ospf_instance': ansible_net_ospf_instance,
+              'ospf_neighbor': ansible_net_ospf_neighbor} | to_nice_json }}
         dest: "./output/{{ inventory_hostname }}_ospf_topology.json"
 
-    - name: Save full config to file
+    - name: Save config to file
       ansible.builtin.copy:
-        content: "{{ config_facts | to_nice_json }}"
+        content: "{{ config_state.results | items2dict(key_name='item', value_name='result') | to_nice_json }}"
         dest: "./output/{{ inventory_hostname }}_full_config.json"
