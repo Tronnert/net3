@@ -10,6 +10,15 @@
     ospf_networks:
       - network: 192.168.1.0/24
         area: backbone
+    config_paths:
+      - interface
+      - ip address
+      - ip route
+      - ip service
+      - system ntp client
+      - routing ospf instance
+      - routing ospf area
+      - routing ospf interface-template
 
   tasks:
     - name: Ensure admin user exists with password
@@ -77,13 +86,14 @@
         gather_subset:
           - routing
 
-    - name: Gather configuration
+    - name: Gather configuration 
       community.routeros.api_info:
         hostname: "{{ ansible_host }}"
         username: "{{ ansible_user }}"
         password: "{{ ansible_password }}"
-        gather_subset:
-          - all
+        path: "{{ item }}"
+      loop: "{{ config_paths }}"
+      register: config_state
   
     - name: Create output directory
       ansible.builtin.file:
