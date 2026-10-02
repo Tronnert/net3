@@ -22,7 +22,6 @@
           - name: admin
             password: "123"
             group: full
-      delegate_to: localhost
 
     - name: Enable NTP client and set servers
       community.routeros.api_modify:
@@ -34,7 +33,6 @@
           - enabled: true
             mode: unicast
             servers: "{{ ntp_servers | join(',') }}"
-      delegate_to: localhost
 
     - name: Create OSPF instance with Router ID
       community.routeros.api_modify:
@@ -47,7 +45,6 @@
             router-id: "{{ ospf_router_id }}"
             version: 2
             disabled: false
-      delegate_to: localhost
 
     - name: Add OSPF networks
       community.routeros.api_modify:
@@ -59,7 +56,6 @@
           - name: backbone
             instance: default
             area-id: 0.0.0.0
-      delegate_to: localhost
 
     - name: Add OSPF interface templates
       community.routeros.api_modify:
@@ -72,30 +68,25 @@
             interfaces: ether1
             network: "{{ item.network }}"
       loop: "{{ ospf_networks }}"
-      delegate_to: localhost
 
     - name: Gather OSPF topology facts
       community.routeros.facts:
         gather_subset:
           - routing
       register: ospf_facts
-      delegate_to: localhost
 
     - name: Gather full configuration
       community.routeros.facts:
         gather_subset:
           - config
       register: config_facts
-      delegate_to: localhost
 
     - name: Save OSPF topology to file
       ansible.builtin.copy:
         content: "{{ ospf_facts | to_nice_json }}"
         dest: "./output/{{ inventory_hostname }}_ospf_topology.json"
-      delegate_to: localhost
 
     - name: Save full config to file
       ansible.builtin.copy:
         content: "{{ config_facts | to_nice_json }}"
         dest: "./output/{{ inventory_hostname }}_full_config.json"
-      delegate_to: localhost
