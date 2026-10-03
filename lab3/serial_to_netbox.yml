@@ -1,0 +1,38 @@
+---
+- name: Serial to NetBox
+  hosts: device_roles_chr
+  gather_facts: false
+  connection: local
+  vars:
+    netbox_url: http://ct2.lan.com:8000
+    netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
+  module_defaults:
+    group/community.routeros.api:
+      hostname: "{{ ansible_host }}"
+      username: "{{ routeros_user }}"
+      password: "{{ routeros_password }}"
+  tasks:
+    - name: Read /system license
+      community.routeros.api:
+        path: system license
+      register: lic
+
+    - name: Get system-id
+      ansible.builtin.set_fact:
+        chr_serial: "{{ lic.msg[0]['system-id'] }}"
+
+    - name: Show serial
+      ansible.builtin.debug:
+        var: chr_serial
+
+    - name: Write serial to NetBox
+      netbox.netbox.netbox_device:
+        netbox_url: "{{ netbox_url }}"
+        netbox_token: "{{ netbox_token }}"
+        validate_certs: false
+        data:
+          name: "{{ inventory_hostname }}"
+          device_type: CHR
+          site: home0
+          serial: "{{ chr_serial }}"
+        state: present
