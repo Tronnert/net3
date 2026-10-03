@@ -1,0 +1,37 @@
+---
+- name: Configure CHR from NetBox
+  hosts: device_roles_chr
+  gather_facts: false
+  connection: local 
+  vars:
+    netbox_url: http://ct2.lan.com:8000
+    netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
+  module_defaults:
+    group/community.routeros.api:
+      hostname: "{{ ansible_host }}"
+      username: "{{ routeros_user }}"
+      password: "{{ routeros_password }}"
+  tasks:
+    - name: get IP from NetBox
+      ansible.builtin.set_fact:
+        nb_ips: >-
+          {{ query('netbox.netbox.nb_lookup', 'ip-addresses',
+                   api_endpoint=netbox_url, token=netbox_token,
+                   api_filter='device=' ~ inventory_hostname) }}
+
+    - name: Name from NetBox
+      community.routeros.api_modify:
+        path: system identity
+        data:
+          - name: "{{ inventory_hostname }}"
+
+    - name: Add IP from NetBox
+      community.routeros.api_modify:
+        path: ip address
+        data:
+          - address: "{{ item.value.address }}"
+            interface: "{{ item.value.assigned_object.name }}"
+      loop: "{{ nb_ips }}"
+      loop_control:
+        label: "{{ item.value.address }}"
+      when: item.value.assigned_object | default(none) is not none
