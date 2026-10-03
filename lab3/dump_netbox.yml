@@ -1,0 +1,40 @@
+---
+- name: DUmp NetBox
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    netbox_url: http://ct2.lan.com:8000
+    netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
+    endpoints:
+      - sites
+      - manufacturers
+      - device-types
+      - device-roles
+      - platforms
+      - devices
+      - interfaces
+      - ip-addresses
+      - prefixes
+  tasks:
+    - name: Create output directory
+      ansible.builtin.file:
+        path: output
+        state: directory
+        mode: "0755"
+
+    - name: Get NetBox
+      ansible.builtin.set_fact:
+        netbox_dump: >-
+          {{ netbox_dump | default({}) | combine({
+               item: query('netbox.netbox.nb_lookup', item,
+                           api_endpoint=netbox_url, token=netbox_token)
+                     | map(attribute='value') | list
+             }) }}
+      loop: "{{ endpoints }}"
+
+    - name: Save
+      ansible.builtin.copy:
+        content: "{{ netbox_dump | to_nice_json }}"
+        dest: output/netbox_dump.json
+        mode: "0644"
