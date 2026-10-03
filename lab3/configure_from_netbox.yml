@@ -25,6 +25,15 @@
         data:
           - name: "{{ inventory_hostname }}"
 
+    - name: Current IPs on device
+      community.routeros.api:
+        path: ip address
+      register: current_ips
+
+    - name: Collect existing addresses
+      ansible.builtin.set_fact:
+        existing_ips: "{{ current_ips.msg | map(attribute='address') | list }}"
+
     - name: Add IP from NetBox
       community.routeros.api_modify:
         path: ip address
