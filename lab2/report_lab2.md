@@ -1,0 +1,104 @@
+University: [ITMO University](https://itmo.ru/ru/)<br />
+Faculty: [FICT](https://fict.itmo.ru)<br />
+Course: [Network programming](https://github.com/itmo-ict-faculty/network-programming)<br /> 
+Year: 2025/2026<br />
+Author: Голованов Дмитрий Игоревич<br />
+Lab: Lab2<br />
+
+
+
+# Лабораторная работа №2. Ansible: настройка MikroTik CHR (NTP, OSPF)
+
+## Конфигурационные файлы
+
+- [Playbook настройки CHR](configure_chr.yml)
+- [Inventory](inventory.ini)
+- [Лог выполнения playbook](a.txt)
+
+Выполнение playbook:
+
+```
+(venv) [root@lab1 net3]# ansible-playbook -i lab2/inventory.ini lab2/configure_chr.yml
+
+PLAY [Configure two MikroTik CHR devices] ******************************************************************************
+
+TASK [Ensure admin user exists with password] **************************************************************************
+ok: [chr2]
+ok: [chr1]
+
+TASK [Enable NTP client and set servers] *******************************************************************************
+ok: [chr1]
+ok: [chr2]
+
+TASK [Create OSPF instance with Router ID] *****************************************************************************
+ok: [chr1]
+ok: [chr2]
+
+TASK [Add OSPF networks] ***********************************************************************************************
+ok: [chr1]
+ok: [chr2]
+
+TASK [Add OSPF interface templates] ************************************************************************************
+ok: [chr1] => (item={'network': '192.168.1.0/24', 'area': 'backbone'})
+ok: [chr2] => (item={'network': '192.168.1.0/24', 'area': 'backbone'})
+
+TASK [Gather OSPF facts] ***********************************************************************************************
+[WARNING]: Error while querying path system routerboard: no such command or directory (routerboard), no such command prefix
+[WARNING]: Error while querying path routing bgp peer: no such command prefix
+[WARNING]: Error while querying path routing bgp vpnv4-route: no such command prefix
+ok: [chr1]
+ok: [chr2]
+
+TASK [Gather configuration] ********************************************************************************************
+ok: [chr2] => (item=interface)
+ok: [chr1] => (item=interface)
+ok: [chr1] => (item=ip address)
+ok: [chr2] => (item=ip address)
+ok: [chr2] => (item=ip route)
+ok: [chr1] => (item=ip route)
+ok: [chr2] => (item=ip service)
+ok: [chr1] => (item=ip service)
+ok: [chr1] => (item=system ntp client)
+ok: [chr2] => (item=system ntp client)
+ok: [chr1] => (item=routing ospf instance)
+ok: [chr2] => (item=routing ospf instance)
+ok: [chr1] => (item=routing ospf area)
+ok: [chr2] => (item=routing ospf area)
+ok: [chr1] => (item=routing ospf interface-template)
+ok: [chr2] => (item=routing ospf interface-template)
+
+TASK [Create output directory] *****************************************************************************************
+changed: [chr1]
+
+TASK [Save OSPF topology to file] **************************************************************************************
+[WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /root/net3/lab2/configure_chr.yml:107:18
+
+105     - name: Save OSPF topology to file
+106       ansible.builtin.copy:
+107         content: >-
+                     ^ column 18
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+changed: [chr1]
+changed: [chr2]
+
+TASK [Save config to file] *********************************************************************************************
+changed: [chr1]
+changed: [chr2]
+
+PLAY RECAP *************************************************************************************************************
+chr1                       : ok=10   changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+chr2                       : ok=9    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+(venv) [root@lab1 net3]#
+```
+
+Кусочки финальных файлов:
+
+![Рисунок 1](1.png)
+
+![Рисунок 2](2.png)
+
