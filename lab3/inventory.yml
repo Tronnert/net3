@@ -9,4 +9,4 @@ group_by:
   - device_roles
   - sites
   - device_types
-ansible_python_interpreter=/root/net3/venv/bin/python3
+ansible_python_interpreter: /root/net3/venv/bin/python3
