@@ -43,4 +43,6 @@
       loop: "{{ nb_ips }}"
       loop_control:
         label: "{{ item.value.address }}"
-      when: item.value.assigned_object | default(none) is not none
+      when: 
+        - item.value.assigned_object | default(none) is not none
+        - item.value.address not in existing_ips
